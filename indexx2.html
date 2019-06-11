@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PERT</title>
+  <meta charset="UTF-8">
+  <script type="text/javascript" src="http://visjs.org/dist/vis.js"></script>
+  <!--link href="http://visjs.org/dist/vis-network.min.css" rel="stylesheet" type="text/css" /-->
+  
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <!--script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script-->
+  <script src="js/go.js"></script>
+  <script src="js/goSamples.js"></script>
+  <script src="js/html2canvas.js"></script>
+  <!--style type="text/css">
+    #mynetwork {
+      width: 100%;
+      height: 500px;
+      border: 1px solid lightgray;
+    }
+  </style-->
+</head>
+<body>
+  <input type="button" class="btn btn-warning btn-lg btn-block" value="IR A INICIO" onclick="nextPageH()">
+  <input type="button" class="btn btn-secondary btn-lg btn-block" value="IR A INSTRUCCIONES" onclick="nextPageP()">
+  <hr>
+<div class="card">
+  <h3 class="card-header">
+      PERT (TÉCNICA DE REVISIÓN Y EVALUACIÓN DE PROYECTOS)
+  </h3>
+  <div class="card-body">
+    <div class="card">
+        <h4 class="card-header">
+            TABLA DE VARIACIONES EN TIEMPOS
+        </h4>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead class="thead-dark">
+                  <tr>
+                    <th scope="col">ACONTECIMIENTO</th>
+                    <th scope="col">PREDECESOR</th>
+                    <th scope="col">SUCESOR</th>
+                    <th scope="col">ta</th>
+                    <th scope="col">tm</th>
+                    <th scope="col">tb</th>
+                  </tr>
+                </thead>
+                <tbody id="contentQ">
+                  <tr>
+                    <th scope="row">A</th>
+                    <td><input class="form-control" type="number" id="pred1"></td>
+                    <td><input class="form-control" type="number" id="suc1"></td>
+                    <td><input class="form-control" type="number" id="ta1"></td>
+                    <td><input class="form-control" type="number" id="tm1"></td>  
+                    <td><input class="form-control" type="number" id="tb1"></td>
+                  </tr>
+                </tbody>
+            </table>
+              <input type="button" class="btn btn-success btn-lg btn-block" id="btAdd" value="+ Añadir Acontecimiento">
+        </div>
+    </div>
+    <hr>
+    <div class="form-group">
+        <label for="cantidad"><h4>Cantidad de Nodos:</h4></label>
+        <input type="number" class="form-control" id="cantidad">
+    </div>
+    <input type="button" class="btn btn-primary btn-lg btn-block" value="GRAFICAR" onclick="graph()">
+    <hr>
+  </div>
+</div>
+
+<div id="Capture1">
+  <div class="card">
+    <h4 class="card-header text-white bg-dark">
+        Grafo de Red Normal
+    </h4>
+    <div class="card-body">
+        <div id="mynetwork"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 class="card-header">
+      PERT
+  </h3>
+  <div class="card-body">
+    <div id="Capture2">
+        <div class="card">
+            <h4 class="card-header">
+                TABLA DE VARIACIONES EN TIEMPOS
+            </h4>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead class="thead-dark">
+                      <tr>
+                        <th class="col-md-1 text-center" scope="col">ACTIVIDAD</th>
+                        <th class="col-md-1 text-center" scope="col">ta</th>
+                        <th class="col-md-1 text-center" scope="col">tM</th>
+                        <th class="col-md-1 text-center" scope="col">tb</th>
+                        <th class="col-md-1 text-center" scope="col">te (Tiempo Estimado)</th>
+                        <th class="col-md-1 text-center" scope="col">α (Desviacion Estandar)</th>
+                        <th class="col-md-1 text-center" scope="col">α^2 (Varianza)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="contentQ2">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <img src="images/pertRectangulo.PNG" width="600">
+        <div id="Capture3">
+          <h4 class="card-header">
+              Diagrama de PERT
+          </h4>
+          <div class="card-body">
+              <div id="myDiagramDiv" style="border: solid 1px black; width:100%; height:600px"></div>
+          </div>
+        </div>
+    </div>
+    <div class="card">
+      <div id="Capture4">
+          <h4 class="card-header">
+              Probabilidades
+          </h4>
+          <div class="card-body">
+              <h4>Tiempo Crítico : </h4>
+              <h4 id="tC"></h4>
+              <hr>
+              <h4>Varianza Crítica : </h4>
+              <h4 id="vC"></h4>
+              <hr>
+              <div>
+                <div class="form-group">
+                  <label for="nTempo"><h4>Probabilidad de Acabar en n Tiempo :</h4></label>
+                  <input type="number" class="form-control" id="nTempo">
+                </div>
+                <h4 id="result"></h4>
+                <h4 id="resultProb"></h4>
+                <input class="btn btn-primary" type="button" value="Calcular" onclick="calcular()">
+              </div>
+              <hr>
+              <div>
+                <div class="form-group">
+                  <label for="nTempo"><h4>Probabilidad de Acabar en n y m Tiempo :</h4></label>
+                  <input type="number" class="form-control" id="nTempo1"> <h4>-y-</h4> <input type="number" class="form-control" id="nTempo2">
+                </div>
+                <h4 id="resultProb2"></h4>
+                <input class="btn btn-primary" type="button" value="Calcular" onclick="calcularSecond()">
+              </div>
+              <hr>
+          </div>
+      </div>
+    </div>
+    <input class="btn btn-success btn-lg btn-block" type="button" value="NUEVO EJERCICIO" onclick="newExcercise()">
+</div>
+
+<div class="card" id="printDiv">
+    <h3 class="card-header">
+        General
+    </h3>
+    <div class="card-body">
+      <input type="button" class="btn btn-success btn-lg btn-block" id="btAdd" value="Sacar Resumen" onclick="exportar()">
+      <table class="table table-striped">
+          <tbody>
+              <tr>
+                <td id="FOTO1"></td>
+                <td id="FOTO2"></td>
+              </tr>
+              <tr>
+                <td id="FOTO3"></td>
+                <td id="FOTO4"></td>
+              </tr>
+          </tbody>
+      </table>
+      <input type="button" class="btn btn-success btn-lg btn-block" value="IMPRIMIR" onclick="printElem()">
+      <div id="FOTO"></div>
+    </div>
+</div>
+<input type="button" class="btn btn-success btn-lg btn-block" value="IR A INICIO" onclick="nextPageH()">
+    <input type="button" class="btn btn-primary btn-lg btn-block" value="IR A INSTRUCCIONES" onclick="nextPageP()">
+</body>
+</html>
+<script>
+  function nextPageH() {
+    window.location.replace("index.html");
+    //getParameter("1,1,1,2,3,4,5,6,6,7","2,3,5,4,6,6,7,7,8,8","3,3,4,2,3,4,10,3,3,7","7,8,5,2,7,5,14,6,7,8","8,10,6,2,10,6,16,9,8,12","8");
+  }
+  function nextPageP() {
+    window.location.replace("Instrucciones.html");
+  }
+  function printElem(divId) {
+    var content = document.getElementById("printDiv").innerHTML;
+    var mywindow = window.open('', 'Print', 'height=600,width=800');
+
+    mywindow.document.write('<html><head><title>Print</title>');
+    mywindow.document.write('</head><body >');
+    mywindow.document.write(content);
+    mywindow.document.write('</body></html>');
+
+    mywindow.document.close();
+    mywindow.focus()
+    mywindow.print();
+    mywindow.close();
+    return true;
+}
+</script>
+<script type="text/javascript">
+  function exportar() {
+    html2canvas(document.querySelector("#Capture1")).then(canvas => {
+        //document.getElementById("FOTO").appendChild(canvas)
+        var img = new Image();
+        img.src = canvas.toDataURL("image/png");
+        img.width = 850;
+        document.getElementById("FOTO1").appendChild(img);
+    });
+    html2canvas(document.querySelector("#Capture2")).then(canvas => {
+        //document.getElementById("FOTO").appendChild(canvas)
+        var img = new Image();
+        img.src = canvas.toDataURL("image/png");
+        img.width = 850;
+        document.getElementById("FOTO2").appendChild(img);
+    });
+    html2canvas(document.querySelector("#Capture3")).then(canvas => {
+        //document.getElementById("FOTO").appendChild(canvas)
+        var img = new Image();
+        img.src = canvas.toDataURL("image/png");
+        img.width = 850;
+        document.getElementById("FOTO3").appendChild(img);
+    });
+    html2canvas(document.querySelector("#Capture4")).then(canvas => {
+        //document.getElementById("FOTO").appendChild(canvas)
+        var img = new Image();
+        img.src = canvas.toDataURL("image/png");
+        img.width = 850;
+        document.getElementById("FOTO4").appendChild(img);
+    });
+  }
+  // create an array with nodes
+  var nod=[];
+  var edg=[];
+  var pred=[];
+  var suc=[];
+  var ta=[];
+  var tm=[];
+  var tb=[];
+  var cantidad;
+  function graph() {
+    nodes=new vis.DataSet();
+    edges = new vis.DataSet();
+    cantidad=document.getElementById('cantidad').value;
+    for(var i=0;i<cantNodos;i++) {
+      pred.push(document.getElementById('pred'+(i+1)).value);
+      suc.push(document.getElementById('suc'+(i+1)).value);
+      ta.push(document.getElementById('ta'+(i+1)).value);
+      tm.push(document.getElementById('tm'+(i+1)).value);
+      tb.push(document.getElementById('tb'+(i+1)).value);
+    }
+    for(var i=0;i<cantidad;i++) {
+      if (i==0) {
+        nod.push({id: i+1, label: (i+1).toString(), x: 10});
+      } else if (i==(cantidad-1)) {
+        nod.push({id: i+1, label: (i+1).toString(), x: 600});
+      } else {
+        nod.push({id: i+1, label: (i+1).toString()});
+      }
+    }
+    /*var nodes = new vis.DataSet([
+      {id: 1, label: '1'},
+      {id: 2, label: '2'},
+      {id: 3, label: '3'},
+      {id: 4, label: '4'},
+      {id: 5, label: '5'},
+      {id: 6, label: '6'},
+      {id: 7, label: '7'},
+    ]);*/
+    for(var i=0;i<cantNodos;i++) {
+      edg.push({from: pred[i], to:suc[i], arrows:'to', label:(mai[i]+'\n'+ta[i]+','+tm[i]+','+tb[i]).toString(), font: {align: 'horizontal'}});
+    }
+    //console.log(nod);
+    //console.log(edg);
+    nodes.add(nod);
+    edges.add(edg);
+    // create an array with edges
+    /*var edges = new vis.DataSet([
+      {from: 1, to: 2,arrows:'to',label: 'A\n4,6,8', font: {align: 'horizontal'}},
+      {from: 1, to: 3,arrows:'to',label: 'B\n6,8,13', font: {align: 'horizontal'}},
+      {from: 2, to: 4,arrows:'to',label: 'C\n2,2,2', font: {align: 'horizontal'}},
+      {from: 2, to: 5,arrows:'to',label: 'D\n2,4,9', font: {align: 'horizontal'}},
+      {from: 3, to: 7,arrows:'to',label: 'H\n11,12,13', font: {align: 'horizontal'}},
+      {from: 4, to: 6,arrows:'to',label: 'E\n10,12,17', font: {align: 'horizontal'}},
+      {from: 5, to: 6,arrows:'to',label: 'F\n5,6,7', font: {align: 'horizontal'}},
+      {from: 6, to: 7,arrows:'to',label: 'G\n2,3,4', font: {align: 'horizontal'}}
+    ]);*/
+
+    // create a network
+    var container = document.getElementById('mynetwork');
+    var data = {
+      nodes: nodes,
+      edges: edges
+    };
+    var options = {
+      edges: {
+        font: {
+          size: 12
+        }
+      },
+      nodes: {
+        shape: 'circle',
+        font: {
+          bold: {
+            color: '#0077aa'
+          }
+        }
+      },
+      physics: {
+        enabled: true
+      }
+    };
+    var network = new vis.Network(container, data, options);
+    getParameter(pred.toString(),suc.toString(),ta.toString(),tm.toString(),tb.toString(),cantidad.toString());
+  }
+</script>
+<script>
+  var cantNodos=1;
+  var mai=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","U","V","W","X","Y","Z"];
+  $('#btAdd').click(function() {
+    $('#contentQ').append('<tr><th scope="row">'+mai[cantNodos]+'</th><td><input class="form-control" type="number" id="pred'+(cantNodos+1)+'"></td><td><input class="form-control" type="number" id="suc'+(cantNodos+1)+'"></td><td><input class="form-control" type="number" id="ta'+(cantNodos+1)+'"></td><td><input class="form-control" type="number" id="tm'+(cantNodos+1)+'"></td><td><input class="form-control" type="number" id="tb'+(cantNodos+1)+'"></td></tr>');
+    cantNodos++;
+  });
+  function nextPage() {
+    window.location.replace("per.html?pred="+pred.toString()+"&suc="+suc.toString()+"&ta="+ta.toString()+"&tm="+tm.toString()+"&tb="+tb.toString()+"&cant="+cantidad.toString());
+  }
+</script>
+
+<script type="text/javascript">
+  var pred,suc,ta,tm,tb=[];
+  var te=[];
+  var va=[];
+  var de=[];
+  var rectan=[];
+  var cantidad;
+  var tC;
+  var vC;
+</script>
+<script>
+  function newExcercise() {
+    window.location.replace("indexx2.html");
+  }
+  var mai=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","U","V","W","X","Y","Z"];
+  function getParameter(predW,sucW,taW,tmW,tbW,cantidadW) {
+    var url_string = window.location.href;
+    var url = new URL(url_string);
+    pred = predW.split(",").map(function(item) {
+        return parseInt(item, 10);
+    });
+    suc = sucW.split(",").map(function(item) {
+        return parseInt(item, 10);
+    });
+    ta = taW.split(",").map(function(item) {
+        return parseInt(item, 10);
+    });
+    tm = tmW.split(",").map(function(item) {
+        return parseInt(item, 10);
+    });
+    tb = tbW.split(",").map(function(item) {
+        return parseInt(item, 10);
+    });
+    cantidad=cantidadW;
+
+    for (var i=0;i<pred.length;i++) {
+      te.push(redondear((ta[i]+tm[i]*4+tb[i])/6,2));
+      de.push(redondear((tb[i]-ta[i])/6,2));
+      va.push(redondear(Math.pow((tb[i]-ta[i])/6,2),2));
+    }
+
+    for (var i=0;i<pred.length;i++) {
+      $('#contentQ2').append('<tr><th class="text-center" scope="row">'+pred[i]+"-"+suc[i]+'</th><td class="text-center">'+ta[i]+'</td><td class="text-center">'+tm[i]+'</td><td class="text-center">'+tb[i]+'</td><td class="text-center">'+te[i]+'</td><td class="text-center">'+de[i]+'</td><td class="text-center">'+va[i]+'</td></tr>');
+    }
+    
+    for (var i=0;i<pred.length;i++) {
+      //Encontrar E0 EF
+      var e0;
+      var e0t=searchPred(pred[i]);
+      if (e0t.length==0) {
+        e0=0;
+      } else {
+        if(e0t.length==1) {
+          e0=rectan[e0t[0]][2];
+        } else {
+          var max=rectan[e0t[0]][2];
+          var pos=0;
+          for (var j=0;j<e0t.length;j++) {
+            if (rectan[e0t[j]][2]>max) {
+              max=rectan[e0t[j]][2];
+              pos=j;
+            }
+          }
+          e0=max;
+        }
+      }
+      var ef=e0+te[i];
+      //rectan.push([e0,mai[i],ef,0,te[i],0]);
+      rectan.push([redondear(e0,2),pred[i]+"-"+suc[i],redondear(ef,2),0,redondear(te[i],2),0]);
+    }
+    for (var i=pred.length-1;i>=0;i--) {
+      var lf;
+      var lft=searchSuc(suc[i]);
+      if (lft.length==0) {
+        lf=rectan[i][2];
+      } else {
+        if (lft.length==1) {
+          lf=rectan[lft[0]][3];
+        } else {
+          var min=rectan[lft[0]][3];
+          var pos=0;
+          for (var j=0;j<lft.length;j++) {
+            if (rectan[lft[j]][3]<min) {
+              min=rectan[lft[j]][3];
+              pos=j;
+            }
+          }
+          lf=min;
+        }
+      }
+      var l0=lf-te[i];
+      rectan[i][3]=redondear(l0,2);
+      rectan[i][4]=redondear(rectan[i][4],2);
+      rectan[i][5]=redondear(lf,2);
+    }
+    console.log(rectan);
+
+    //Ruta Critica
+
+    var rutaF=[];
+    var rutaS=[];
+    for (var i=0;i<pred.length;i++) {
+      if(rectan[i][3]==rectan[i][0]) {
+        rutaF.push([i,pred[i],suc[i]]);
+      }
+    }
+    var maxR=0;
+    var posMax;
+    for (var i=0;i<rutaF.length;i++) {
+      if(rectan[rutaF[i][0]][5]>maxR) {
+        maxR=rectan[rutaF[i][0]][5];
+        posMax=i;
+      }
+    }
+    rutaS.push(rectan[rutaF[posMax][0]]);
+    for (var i=posMax;i>=0;i--) {
+      for (var j=0;j<rutaF.length;j++) {
+        if (rutaF[j][2]==rutaF[i][1]) {
+          rutaS.push(rectan[rutaF[j][0]]);
+          i=j+1;
+        }
+      }
+    }
+    console.log(rutaS);
+
+    var nodeDataArray=[];
+    var linkDataArray=[];
+
+    nodeDataArray.push({ key: 1, text: "INICIO", length: 0, earlyStart: 0, lateFinish: 0, critical: true });
+
+    for (var i=0;i<pred.length;i++) {
+      //var crit=(rectan[i][3]==rectan[i][0])?true:false;
+      var crit=false;
+      rutaS.forEach(element => {
+        if (element.includes(rectan[i][2]) && element.includes(rectan[i][3])) {
+          crit=true;
+        }
+      });
+      nodeDataArray.push({key:i+2,text:rectan[i][1],length:rectan[i][4],earlyStart:rectan[i][0],lateFinish:rectan[i][5],critical:crit});
+    }
+    nodeDataArray.push({ key: pred.length+2, text: "FIN", length: 0, earlyStart: rutaS[rutaS.length-1][2], lateFinish: rutaS[rutaS.length-1][2], critical: true });
+    linkDataArray.push({ from: 1, to: 2 });
+    for (var i=0;i<pred.length;i++) {
+      if (rectan[i][1].split("-")[0]=="1") {
+        linkDataArray.push({from: 1, to: i+2 });
+      }
+      if (rectan[i][1].split("-")[1]==cantidad.toString()) {
+        linkDataArray.push({from: i+2, to: pred.length+2 });
+      }
+    }
+    var i,j;
+    for (i=0;i<pred.length;i++) {
+      var tempSuc=searchSuc(suc[i]);
+      for (j=0;j<tempSuc.length;j++) {
+        linkDataArray.push({from: i+2, to: tempSuc[j]+2 });
+      }
+    }
+    //linkDataArray.push({ from: i+2, to: j+2 });
+    tC=0;
+    vC=0;
+    var msgTc=[];
+    var msgVc=[];
+    rutaS.forEach(element => {
+      tC+=element[4];
+      msgTc.push(element[4]);
+      for (var i=0;i<pred.length;i++) {
+        if (rectan[i][1]==element[1]) {
+          vC+=va[i];
+          msgVc.push(va[i]);
+        }
+      }
+    });
+    document.getElementById("tC").innerHTML=msgTc.join("+")+"="+tC;
+    document.getElementById("vC").innerHTML=msgVc.join("+")+"="+vC;
+
+    initGraph(nodeDataArray,linkDataArray);
+  }
+  function calcular() {
+    var nT=parseFloat(document.getElementById("nTempo").value);
+    var res=(nT-tC)/Math.sqrt(vC);
+    document.getElementById("result").innerHTML="K("+nT+") = ("+nT+"-"+tC+") / √"+vC+" = "+res;
+    ////
+    document.getElementById("resultProb").innerHTML="Probabilidad = P"+nT+" ="+(probab(res)*100).toString()+"%";
+  }
+
+  function calcularSecond() {
+    var nT1=parseFloat(document.getElementById("nTempo1").value);
+    var nT2=parseFloat(document.getElementById("nTempo2").value);
+    var res1=(nT1-tC)/Math.sqrt(vC);
+    var res2=(nT2-tC)/Math.sqrt(vC);
+    var prob1=probab(res1);
+    var prob2=probab(res2);
+    var prob3=(prob1-prob2)*100;
+    ////
+    document.getElementById("resultProb2").innerHTML="Probabilidad = P"+nT1+" - P"+nT2+" = "+(prob1*100).toString()+"% - "+(prob2*100).toString()+"% = "+prob3.toString()+"%";
+  }
+
+  function probab(res) {
+    var probs;
+    var posProb;
+    if (res>=0) {
+      probs=distribucion[res.toFixed("3").substring(0,3)];
+      posProb=parseInt(res.toString().substring(3,4));
+    } else {
+      probs=distribucion[res.toFixed("3").substring(0,4)];
+      posProb=parseInt(res.toString().substring(4,5));
+    }
+    return probs[posProb];
+  }
+  function searchPred(num) {
+    var preds=[];
+    for (var i=0;i<pred.length;i++) {
+      if (suc[i]==num) {
+        preds.push(i);
+      }
+    }
+    return preds;
+  }
+  function searchSuc(num) {
+    var sucs=[];
+    for (var i=0;i<suc.length;i++) {
+      if (pred[i]==num) {
+        sucs.push(i);
+      }
+    }
+    return sucs;
+  }
+  function redondear(number,decimals) {
+    return Math.round(number*Math.pow(10,decimals))/Math.pow(10,decimals);
+  }
+</script>
+<script>
+    function initGraph(nodeDataArray,linkDataArray) { 
+    var $ = go.GraphObject.make;
+
+    var blue = "#0288D1";
+    var pink = "#B71C1C";
+    var pinkfill = "#F8BBD0";
+    var bluefill = "#B3E5FC";
+
+    myDiagram =
+      $(go.Diagram, "myDiagramDiv",
+        {
+          initialAutoScale: go.Diagram.Uniform,
+          initialContentAlignment: go.Spot.Center,
+          layout: $(go.LayeredDigraphLayout)
+        });
+
+    myDiagram.nodeTemplate =
+      $(go.Node, "Auto",
+        $(go.Shape, "Rectangle",  
+          { fill: "white", strokeWidth: 2 },
+          new go.Binding("fill", "critical", function (b) { return (b ? pinkfill : bluefill ); }),
+          new go.Binding("stroke", "critical", function (b) { return (b ? pink : blue); })),
+        $(go.Panel, "Table",
+          { padding: 0.5 },
+          $(go.RowColumnDefinition, { column: 1, separatorStroke: "black" }),
+          $(go.RowColumnDefinition, { column: 2, separatorStroke: "black" }),
+          $(go.RowColumnDefinition, { row: 1, separatorStroke: "black", background: "white", coversSeparators: true }),
+          $(go.RowColumnDefinition, { row: 2, separatorStroke: "black" }),
+          $(go.TextBlock, 
+            new go.Binding("text", "earlyStart"),
+            { row: 0, column: 0, margin: 5, textAlign: "center" }),
+          $(go.TextBlock,
+            new go.Binding("text", "length"),
+            { row: 0, column: 1, margin: 5, textAlign: "center" }),
+          $(go.TextBlock, 
+            new go.Binding("text", "",
+                           function(d) { return (d.earlyStart + d.length).toFixed(2); }),
+            { row: 0, column: 2, margin: 5, textAlign: "center" }),
+
+          $(go.TextBlock,
+            new go.Binding("text", "text"),
+            { row: 1, column: 0, columnSpan: 3, margin: 5,
+              textAlign: "center", font: "bold 14px sans-serif" }),
+
+          $(go.TextBlock,  
+            new go.Binding("text", "",
+                           function(d) { return (d.lateFinish - d.length).toFixed(2); }),
+            { row: 2, column: 0, margin: 5, textAlign: "center" }),
+          $(go.TextBlock, 
+            new go.Binding("text", "",
+                           function(d) { return (d.lateFinish - (d.earlyStart + d.length)).toFixed(2); }),
+            { row: 2, column: 1, margin: 5, textAlign: "center" }),
+          $(go.TextBlock, 
+            new go.Binding("text", "lateFinish"),
+            { row: 2, column: 2, margin: 5, textAlign: "center" })
+        ) 
+      );  
+
+/*myDiagram.add(
+      $(go.Node, "Auto",
+        $(go.Shape, "Rectangle",  // the border
+          { fill: bluefill } ),
+        $(go.Panel, "Table",
+          $(go.RowColumnDefinition, { column: 1, separatorStroke: "black" }),
+          $(go.RowColumnDefinition, { column: 2, separatorStroke: "black" }),
+          $(go.RowColumnDefinition, { row: 1, separatorStroke: "black", background: bluefill, coversSeparators: true }),
+          $(go.RowColumnDefinition, { row: 2, separatorStroke: "black" }),
+          $(go.TextBlock, "E0 (Tiempo más temprano de inicio)",
+            { row: 0, column: 0, margin: 5, textAlign: "center" }),
+          $(go.TextBlock, "Tiempo de Espera",
+            { row: 0, column: 1, margin: 5, textAlign: "center" }),
+          $(go.TextBlock, "Ef (Tiempo más temprano de fin)",
+            { row: 0, column: 2, margin: 5, textAlign: "center" }),
+
+          $(go.TextBlock, "Transicion",
+            { row: 1, column: 0, columnSpan: 3, margin: 5,
+              textAlign: "center", font: "bold 14px sans-serif" }),
+
+          $(go.TextBlock, "L0 (Tiempo más tarde de inicio)",
+            { row: 2, column: 0, margin: 5, textAlign: "center" }),
+          $(go.TextBlock, "Holgura",
+            { row: 2, column: 1, margin: 5, textAlign: "center" }),
+          $(go.TextBlock, "Lf (Tiempo más tarde de fin)",
+            { row: 2, column: 2, margin: 5, textAlign: "center" })
+        )  // end Table Panel
+      ));*/
+
+    function linkColorConverter(linkdata, elt) {
+      var link = elt.part;
+      if (!link) return blue;
+      var f = link.fromNode;
+      if (!f || !f.data || !f.data.critical) return blue;
+      var t = link.toNode;
+      if (!t || !t.data || !t.data.critical) return blue;
+      return pink; 
+    }
+
+    myDiagram.linkTemplate =
+      $(go.Link,
+        { toShortLength: 6, toEndSegmentLength: 20 },
+        $(go.Shape,
+          { strokeWidth: 4 },
+          new go.Binding("stroke", "", linkColorConverter)),
+        $(go.Shape,  
+          { toArrow: "Triangle", stroke: null, scale: 1.5 },
+          new go.Binding("fill", "", linkColorConverter))
+      );
+    myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
+  }
+</script>
+<script>
+  var distribucion= {
+    "-3.0": [0.0013,0.0010,0.0007,0.0005,0.0003,0.0002,0.0001,0.0001,0],
+    "-2.9": [0.0019,0.0018,0.0018,0.0017,0.0016,0.0016,0.0015,0.0015,0.0014,0.0014],
+    "-2.8": [0.0026,0.0025,0.0024,0.0023,0.0023,0.0022,0.0021,0.0021,0.0020,0.0019],
+    "-2.7": [0.0035,0.0034,0.0033,0.0032,0.0031,0.0030,0.0029,0.0028,0.0027,0.0026],
+    "-2.6": [0.0047,0.0045,0.0044,0.0043,0.0041,0.0040,0.0039,0.0038,0.0037,0.0036],
+    "-2.5": [0.0062,0.0060,0.0059,0.0057,0.0055,0.0054,0.0052,0.0051,0.0049,0.0048],
+    "-2.4": [0.0082,0.0080,0.0078,0.0075,0.0073,0.0071,0.0069,0.0068,0.0066,0.0064],
+    "-2.3": [0.0107,0.0104,0.0102,0.0099,0.0096,0.0094,0.0091,0.0089,0.0087,0.0084],
+    "-2.2": [0.0139,0.0136,0.0132,0.0129,0.0125,0.0122,0.0119,0.0116,0.0113,0.0110],
+    "-2.1": [0.0179,0.0174,0.0170,0.0166,0.0162,0.0158,0.0154,0.0150,0.0146,0.0143],
+    "-2.0": [0.0228,0.0222,0.0217,0.0212,0.0207,0.0202,0.0197,0.0192,0.0188,0.0183],
+    "-1.9": [0.0287,0.0281,0.0274,0.0268,0.0262,0.0256,0.0250,0.0244,0.0239,0.0233],
+    "-1.8": [0.0359,0.0351,0.0344,0.0336,0.0329,0.0322,0.0314,0.0307,0.0301,0.0294],
+    "-1.7": [0.0446,0.0436,0.0427,0.0418,0.0409,0.0401,0.0392,0.0384,0.0375,0.0367],
+    "-1.6": [0.0548,0.0537,0.0526,0.0516,0.0505,0.0495,0.0485,0.0475,0.0465,0.0455],
+    "-1.5": [0.0668,0.0655,0.0643,0.0630,0.0618,0.0606,0.0594,0.0582,0.0571,0.0559],
+    "-1.4": [0.0808,0.0793,0.0778,0.0764,0.0749,0.0735,0.0721,0.0708,0.0694,0.0681],
+    "-1.3": [0.0968,0.0951,0.0934,0.0918,0.0901,0.0885,0.0869,0.0853,0.0838,0.0823],
+    "-1-2": [0.1151,0.1131,0.1112,0.1093,0.1075,0.1056,0.1038,0.1020,0.1003,0.0985],
+    "-1.1": [0.1357,0.1335,0.1314,0.1292,0.1271,0.1251,0.1230,0.1210,0.1190,0.1170],
+    "-1.0": [0.1587,0.1562,0.1539,0.1515,0.1492,0.1469,0.1446,0.1423,0.1401,0.1379],
+    "-0.9": [0.1841,0.1814,0.1788,0.1762,0.1736,0.1711,0.1685,0.1660,0.1635,0.1611],
+    "-0.8": [0.2119,0.2090,0.2061,0.2033,0.2005,0.1977,0.1949,0.1922,0.1894,0.1867],
+    "-0.7": [0.2420,0.2389,0.2358,0.2327,0.2296,0.2266,0.2236,0.2206,0.2177,0.2148],
+    "-0.6": [0.2743,0.2709,0.2676,0.2643,0.2611,0.2578,0.2546,0.2514,0.2483,0.2451],
+    "-0.5": [0.3085,0.3050,0.3015,0.2981,0.2946,0.2912,0.2877,0.2843,0.2810,0.2776],
+    "-0.4": [0.3446,0.3409,0.3372,0.3336,0.3300,0.3264,0.3228,0.3192,0.3156,0.3121],
+    "-0.3": [0.3821,0.3783,0.3745,0.3707,0.3669,0.3632,0.3594,0.3557,0.3520,0.3483],
+    "-0.2": [0.4207,0.4168,0.4129,0.4090,0.4052,0.4013,0.3974,0.3936,0.3897,0.3859],
+    "-0.1": [0.4602,0.4562,0.4522,0.4483,0.4443,0.4404,0.4364,0.4325,0.4286,0.4247],
+    "0.0": [0.5,0.4960,0.4920,0.4880,0.4840,0.4801,0.4761,0.4721,0.4681,0.4641],
+    "0.0": [0.5,0.5040,0.5080,0.5120,0.5160,0.5199,0.5239,0.5279,0.5319,0.5359],
+    "0.1": [0.5398,0.5438,0.5478,0.5517,0.5557,0.5596,0.5636,0.5675,0.5714,0.5753],
+    "0.2": [0.5793,0.5838,0.5871,0.5910,0.5948,0.5987,0.6026,0.6064,0.6103,0.6141],
+    "0.3": [0.6179,0.6217,0.6255,0.6293,0.6331,0.6368,0.6406,0.6443,0.6480,0.6517],
+    "0.4": [0.6554,0.6591,0.6628,0.6664,0.6700,0.6736,0.6772,0.6808,0.6844,0.6879],
+    "0.5": [0.6915,0.6950,0.6985,0.7019,0.7054,0.7088,0.7123,0.7157,0.7190,0.7224],
+    "0.6": [0.7257,0.7291,0.7324,0.7357,0.7389,0.7422,0.7454,0.7486,0.7517,0.7549],
+    "0.7": [0.7580,0.7611,0.7642,0.7673,0.7704,0.7734,0.7764,0.7794,0.7823,0.7852],
+    "0.8": [0.7881,0.7910,0.7939,0.7967,0.7995,0.8023,0.8051,0.8078,0.8106,0.8133],
+    "0.9": [0.8159,0.8186,0.8212,0.8238,0.8264,0.8289,0.8315,0.8340,0.8365,0.8389],
+    "1.1": [0.8643,0.8665,0.8686,0.8708,0.8729,0.8749,0.8770,0.8790,0.8810,0.8830],
+    "1.2": [0.8849,0.8869,0.8888,0.8907,0.8925,0.8944,0.8962,0.8980,0.8997,0.9015],
+    "1.3": [0.9032,0.9049,0.9066,0.9082,0.9099,0.9115,0.9131,0.9147,0.9162,0.9177],
+    "1.4": [0.9192,0.9207,0.9222,0.9236,0.9251,0.9265,0.9279,0.9292,0.9306,0.9319],
+    "1.5": [0.9332,0.9345,0.9357,0.9370,0.9382,0.9394,0.9406,0.9418,0.9429,0.9441],
+    "1.6": [0.9452,0.9463,0.9474,0.9484,0.9495,0.9505,0.9515,0.9525,0.9535,0.9545],
+    "1.7": [0.9554,0.9564,0.9573,0.9582,0.9591,0.9599,0.9608,0.9616,0.9625,0.9633],
+    "1.8": [0.9641,0.9649,0.9656,0.9664,0.9671,0.9678,0.9686,0.9693,0.9699,0.9706],
+    "1.9": [0.9713,0.9719,0.9726,0.9732,0.9738,0.9744,0.9750,0.9756,0.9761,0.9767],
+    "2.0": [0.9772,0.9778,0.9783,0.9788,0.9793,0.9798,0.9803,0.9808,0.9812,0.9817],
+    "2.1": [0.9821,0.9826,0.9830,0.9834,0.9838,0.9842,0.9846,0.9850,0.9854,0.9857],
+    "2.2": [0.9861,0.9864,0.9868,0.9871,0.9875,0.9878,0.9881,0.9884,0.9887,0.9890],
+    "2.3": [0.9893,0.9896,0.9898,0.9901,0.9904,0.9906,0.9909,0.9911,0.9913,0.9916],
+    "2.4": [0.9918,0.9920,0.9922,0.9925,0.9927,0.9929,0.9931,0.9932,0.9934,0.9936],
+    "2.5": [0.9938,0.9940,0.9941,0.9943,0.9945,0.9946,0.9948,0.9949,0.9951,0.9952],
+    "2.6": [0.9953,0.9955,0.9956,0.9957,0.9959,0.9960,0.9961,0.9962,0.9963,0.9964],
+    "2.7": [0.9965,0.9966,0.9967,0.9968,0.9969,0.9970,0.9971,0.9972,0.9973,0.9974],
+    "2.8": [0.9974,0.9975,0.9976,0.9977,0.9977,0.9978,0.9979,0.9979,0.9980,0.9981],
+    "2.9": [0.9981,0.9982,0.9982,0.9983,0.9984,0.9984,0.9985,0.9985,0.9986,0.9986],
+    "3.0": [0.9987,0.9990,0.9993,0.9995,0.9997,0.9998,0.9998,0.9999,0.9999,1.0000]
+  };
+</script>
